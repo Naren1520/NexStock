@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexStack - Search</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <script src="profile-icon.js"></script>
+    <div class="container">
+        <div class="header">
+            <h1>🔎 Search Product</h1>
+            <p>Find products by ID or other details</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="tab-btn" onclick="window.location.href='main.html'">Home</button>
+            <button class="tab-btn" onclick="window.location.href='dashboard.html'">Dashboard</button>
+            <button class="tab-btn" onclick="window.location.href='products.html'">Products</button>
+            <button class="tab-btn" onclick="window.location.href='add-product.html'">Add Product</button>
+            <button class="tab-btn active">Search</button>
+            <button class="tab-btn" onclick="window.location.href='analytics.html'">Analytics</button>
+        </div>
+
+        <div class="card" style="max-width: 700px; margin: 30px auto;">
+            <div class="form-group">
+                <label for="searchId">Enter Product ID</label>
+                <input type="number" id="searchId" placeholder="Enter product ID...">
+            </div>
+            <button class="btn-primary" onclick="searchByID()">Search</button>
+            
+            <div id="searchResult"></div>
+
+            <div style="margin-top: 50px; border-top: 2px solid #e0e0e0; padding-top: 30px;">
+                <h3>📊 Search by Other Criteria</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="searchName">Product Name</label>
+                        <input type="text" id="searchName" placeholder="Search by name..." onkeyup="searchByName()">
+                    </div>
+                    <div class="form-group">
+                        <label for="searchPrice">Price Range</label>
+                        <input type="number" id="searchPrice" placeholder="Search by price..." onkeyup="searchByPrice()">
+                    </div>
+                </div>
+                <div id="searchResultByName"></div>
+                <div id="searchResultByPrice"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Developed by Naren S J</p>
+        <p class="footer-copyright">NexStock © 2025</p>
+    </footer>
+    <script>
+        let allProducts = [];
+
+        async function loadData() {
+            try {
+                const res = await fetch("/api/products");
+                if (!res.ok) throw new Error("Failed to load inventory");
+                allProducts = await res.json();
+            } catch (error) {
+                console.error("Error loading data:", error);
+            }
+        }
+
+        function searchByID() {
+            const id = parseInt(document.getElementById("searchId").value);
+            const product = allProducts.find(p => p.id === id);
+            const resultDiv = document.getElementById("searchResult");
+
+            if (!id) {
+                resultDiv.innerHTML = '<div class="card" style="background: #fff3cd; margin-top: 30px;"><p style="color: #856404;">Please enter a product ID</p></div>';
+                return;
+            }
+
+            if (product) {
+                resultDiv.innerHTML = `
+                    <div class="card" style="background: #d4edda; margin-top: 30px;">
+                        <h3 style="color: #155724; margin-bottom: 20px;">✓ Product Found</h3>
+                        <table>
+                            <tr><th>Property</th><th>Value</th></tr>
+                            <tr><td><strong>ID</strong></td><td>${product.id}</td></tr>
+                            <tr><td><strong>Name</strong></td><td>${product.name}</td></tr>
+                            <tr><td><strong>Price</strong></td><td>₹${product.price.toFixed(2)}</td></tr>
+                            <tr><td><strong>Quantity</strong></td><td>${product.quantity} units</td></tr>
+                            <tr><td><strong>Total Value</strong></td><td>₹${(product.price * product.quantity).toFixed(2)}</td></tr>
+                        </table>
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="card" style="background: #f8d7da; margin-top: 30px;">
+                        <h3 style="color: #721c24;">✗ Product Not Found</h3>
+                        <p style="color: #721c24;">No product with ID <strong>${id}</strong> found in inventory.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function searchByName() {
+            const searchTerm = document.getElementById("searchName").value.toLowerCase().trim();
+            const resultDiv = document.getElementById("searchResultByName");
+
+            if (!searchTerm) {
+                resultDiv.innerHTML = '';
+                return;
+            }
+
+            const results = allProducts.filter(p => p.name.toLowerCase().includes(searchTerm));
+
+            if (results.length === 0) {
+                resultDiv.innerHTML = `<p style="color: #999; margin-top: 20px;">No products found matching "${searchTerm}"</p>`;
+                return;
+            }
+
+            let html = `<h3 style="margin-top: 30px;">Results for "${searchTerm}" (${results.length} found)</h3>
+                        <table style="margin-top: 15px;">
+                            <thead><tr><th>ID</th><th>Name</th><th>Price</th><th>Quantity</th></tr></thead>
+                            <tbody>`;
+            
+            results.forEach(p => {
+                html += `<tr><td>${p.id}</td><td>${p.name}</td><td>$${p.price.toFixed(2)}</td><td>${p.quantity}</td></tr>`;
+            });
+            
+            html += '</tbody></table>';
+            resultDiv.innerHTML = html;
+        }
+
+        function searchByPrice() {
+            const price = parseFloat(document.getElementById("searchPrice").value);
+            const resultDiv = document.getElementById("searchResultByPrice");
+
+            if (!price || price <= 0) {
+                resultDiv.innerHTML = '';
+                return;
+            }
+
+            const results = allProducts.filter(p => Math.abs(p.price - price) < 0.01 || p.price === price);
+
+            if (results.length === 0) {
+                resultDiv.innerHTML = `<p style="color: #999; margin-top: 20px;">No products found with price ₹${price.toFixed(2)}</p>`;
+                return;
+            }
+
+            let html = `<h3 style="margin-top: 30px;">Products with price ₹${price.toFixed(2)} (${results.length} found)</h3>
+                        <table style="margin-top: 15px;">
+                            <thead><tr><th>ID</th><th>Name</th><th>Price</th><th>Quantity</th></tr></thead>
+                            <tbody>`;
+            
+            results.forEach(p => {
+                html += `<tr><td>${p.id}</td><td>${p.name}</td><td>₹${p.price.toFixed(2)}</td><td>${p.quantity}</td></tr>`;
+            });
+            
+            html += '</tbody></table>';
+            resultDiv.innerHTML = html;
+        }
+
+        loadData();
+    </script>
+</body>
+</html>

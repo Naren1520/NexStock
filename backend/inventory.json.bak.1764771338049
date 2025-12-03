@@ -1,0 +1,25 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "a",
+      "price": 500,
+      "quantity": 2
+    }
+  ],
+  "rentals": [
+    {
+      "rentalId": 1764770628219,
+      "productId": 1,
+      "productName": "a",
+      "renterName": "naren",
+      "rentDate": "2025-12-03",
+      "returnDate": "2025-12-01",
+      "phoneNumber": "8296833381",
+      "address": "nnnnnn",
+      "amountPaid": 5,
+      "status": "returned",
+      "returnedDate": "2025-12-03"
+    }
+  ]
+}

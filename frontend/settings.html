@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - NexStock</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <script src="profile-icon.js"></script>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ Settings</h1>
+            <p>Manage your preferences, theme, and profile</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="tab-btn" onclick="window.location.href='main.html'">Home</button>
+            <button class="tab-btn" onclick="window.location.href='dashboard.html'">Dashboard</button>
+            <button class="tab-btn" onclick="window.location.href='products.html'">Products</button>
+            <button class="tab-btn" onclick="window.location.href='add-product.html'">Add Product</button>
+            <button class="tab-btn" onclick="window.location.href='search.html'">Search</button>
+            <button class="tab-btn" onclick="window.location.href='analytics.html'">Analytics</button>
+            <button class="tab-btn active">Settings</button>
+        </div>
+
+        <div class="settings-grid">
+            <!-- Theme Section -->
+            <div class="settings-card">
+                <h2>🎨 Theme</h2>
+                <div class="setting-item">
+                    <label for="themeToggle">Dark Mode</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <p class="setting-desc">Enable dark theme for better visibility in low-light environments</p>
+            </div>
+
+            <!-- Font Section -->
+            <div class="settings-card">
+                <h2>📝 Font Settings</h2>
+                <div class="setting-item">
+                    <label for="fontFamily">Font Family</label>
+                    <select id="fontFamily" onchange="applyFontFamily()">
+                        <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Default (Segoe UI)</option>
+                        <option value="'Arial', sans-serif">Arial</option>
+                        <option value="'Georgia', serif">Georgia</option>
+                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="'Comic Sans MS', cursive">Comic Sans</option>
+                        <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                        <option value="'Verdana', sans-serif">Verdana</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label for="fontSize">Font Size</label>
+                    <div class="font-size-control">
+                        <input type="range" id="fontSize" min="12" max="20" value="16" onchange="applyFontSize()">
+                        <span id="fontSizeValue">16px</span>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <label for="lineHeight">Line Height</label>
+                    <input type="range" id="lineHeight" min="1" max="2" step="0.1" value="1.6" onchange="applyLineHeight()">
+                    <span id="lineHeightValue">1.6</span>
+                </div>
+                <p class="setting-desc">Customize font appearance for better readability</p>
+            </div>
+
+            <!-- Profile Section -->
+            <div class="settings-card">
+                <h2>👤 Profile</h2>
+                <div class="setting-item">
+                    <label for="profileImage">Profile Image</label>
+                    <div class="profile-image-upload">
+                        <div id="profilePreview" class="profile-image-preview">
+                            <span>📷</span>
+                        </div>
+                        <input type="file" id="profileImage" accept="image/*" onchange="handleImageUpload(event)" class="profile-image-input">
+                        <label for="profileImage" class="profile-image-label">Choose Image</label>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" placeholder="Enter your full name" onblur="saveProfile()">
+                </div>
+                <div class="setting-item">
+                    <label for="phoneNumber">Phone Number</label>
+                    <input type="tel" id="phoneNumber" placeholder="Enter your phone number (10 digits)" onblur="saveProfile()">
+                </div>
+                <div class="setting-item">
+                    <label for="organisation">Organisation</label>
+                    <input type="text" id="organisation" placeholder="Enter your organisation name" onblur="saveProfile()">
+                </div>
+                <button class="btn-success" onclick="saveProfile()">💾 Save Profile</button>
+                <p class="setting-desc settings-save-desc">Your profile information is stored locally in your browser</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Developed by Naren S J</p>
+        <p class="footer-copyright">NexStock © 2025</p>
+    </footer>
+    <script>
+        console.log('Settings page script loaded');
+        
+        // Load settings on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded event fired on settings page');
+            loadSettings();
+            console.log('loadSettings() called');
+        });
+
+        // Theme Toggle
+        function toggleTheme() {
+            console.log('toggleTheme() called');
+            const isDarkMode = document.getElementById('themeToggle').checked;
+            console.log('isDarkMode:', isDarkMode);
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Apply Font Family
+        function applyFontFamily() {
+            const fontFamily = document.getElementById('fontFamily').value;
+            document.documentElement.style.fontFamily = fontFamily;
+            localStorage.setItem('fontFamily', fontFamily);
+        }
+
+        // Apply Font Size
+        function applyFontSize() {
+            const fontSize = document.getElementById('fontSize').value;
+            document.documentElement.style.fontSize = fontSize + 'px';
+            document.getElementById('fontSizeValue').textContent = fontSize + 'px';
+            localStorage.setItem('fontSize', fontSize);
+        }
+
+        // Apply Line Height
+        function applyLineHeight() {
+            const lineHeight = document.getElementById('lineHeight').value;
+            document.documentElement.style.lineHeight = lineHeight;
+            document.getElementById('lineHeightValue').textContent = lineHeight;
+            localStorage.setItem('lineHeight', lineHeight);
+        }
+
+        // Handle Image Upload
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('profilePreview');
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Profile">`;
+                    localStorage.setItem('profileImage', e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Save Profile
+        function saveProfile() {
+            console.log('saveProfile() called');
+            const profile = {
+                fullName: document.getElementById('fullName').value,
+                phoneNumber: document.getElementById('phoneNumber').value,
+                organisation: document.getElementById('organisation').value
+            };
+            console.log('Profile data:', profile);
+
+            // Validate phone number
+            if (profile.phoneNumber && profile.phoneNumber.length < 10) {
+                alert('Phone number must be at least 10 digits');
+                return;
+            }
+
+            localStorage.setItem('userProfile', JSON.stringify(profile));
+            alert('Profile saved successfully!');
+        }
+
+        // Load Settings from localStorage
+        function loadSettings() {
+            console.log('loadSettings() function executing');
+            // Load theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            console.log('Saved theme:', savedTheme);
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeToggle').checked = true;
+            }
+
+            // Load font family
+            const savedFontFamily = localStorage.getItem('fontFamily');
+            if (savedFontFamily) {
+                document.getElementById('fontFamily').value = savedFontFamily;
+                document.documentElement.style.fontFamily = savedFontFamily;
+            }
+
+            // Load font size
+            const savedFontSize = localStorage.getItem('fontSize') || '16';
+            document.getElementById('fontSize').value = savedFontSize;
+            document.getElementById('fontSizeValue').textContent = savedFontSize + 'px';
+            document.documentElement.style.fontSize = savedFontSize + 'px';
+
+            // Load line height
+            const savedLineHeight = localStorage.getItem('lineHeight') || '1.6';
+            document.getElementById('lineHeight').value = savedLineHeight;
+            document.getElementById('lineHeightValue').textContent = savedLineHeight;
+            document.documentElement.style.lineHeight = savedLineHeight;
+
+            // Load profile image
+            const savedImage = localStorage.getItem('profileImage');
+            if (savedImage) {
+                document.getElementById('profilePreview').innerHTML = `<img src="${savedImage}" alt="Profile">`;
+            }
+
+            // Load profile
+            const savedProfile = localStorage.getItem('userProfile');
+            if (savedProfile) {
+                const profile = JSON.parse(savedProfile);
+                document.getElementById('fullName').value = profile.fullName || '';
+                document.getElementById('phoneNumber').value = profile.phoneNumber || '';
+                document.getElementById('organisation').value = profile.organisation || '';
+            }
+        }
+    </script>
+</body>
+</html>

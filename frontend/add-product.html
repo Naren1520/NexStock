@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexStack-Add Products</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <script src="profile-icon.js"></script>
+    <div class="container">
+        <div class="header">
+            <h1>➕ Add New Product</h1>
+            <p>Add a new product to your inventory</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="tab-btn" onclick="window.location.href='main.html'">Home</button>
+            <button class="tab-btn" onclick="window.location.href='dashboard.html'">Dashboard</button>
+            <button class="tab-btn" onclick="window.location.href='products.html'">Products</button>
+            <button class="tab-btn active">Add Product</button>
+            <button class="tab-btn" onclick="window.location.href='search.html'">Search</button>
+            <button class="tab-btn" onclick="window.location.href='analytics.html'">Analytics</button>
+        </div>
+
+        <div class="card" style="max-width: 600px; margin: 30px auto;">
+            <div class="success-msg" id="successMsg">Product added successfully!</div>
+            <div class="error-msg" id="errorMsg"></div>
+            
+            <form onsubmit="addProduct(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productId">Product ID *</label>
+                        <input type="number" id="productId" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productName">Product Name *</label>
+                        <input type="text" id="productName" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productPrice">Price (₹) *</label>
+                        <input type="number" id="productPrice" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productQuantity">Quantity *</label>
+                        <input type="number" id="productQuantity" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">Add Product</button>
+            </form>
+
+            <div id="recentProducts" style="margin-top: 40px; display: none;">
+                <h3>Recently Added Products</h3>
+                <div id="productsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p> Developed by Naren S J</p>
+        <p class="footer-copyright"> NexStock© 2025</p>
+    </footer>
+    
+    <script>
+        let allProducts = [];
+
+        async function loadData() {
+            try {
+                const res = await fetch("/api/products");
+                if (!res.ok) throw new Error("Failed to load inventory");
+                allProducts = await res.json();
+            } catch (error) {
+                console.error("Error loading data:", error);
+                showError("Failed to load inventory data");
+            }
+        }
+
+        async function addProduct(e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById("productId").value);
+            const name = document.getElementById("productName").value.trim();
+            const price = parseFloat(document.getElementById("productPrice").value);
+            const quantity = parseInt(document.getElementById("productQuantity").value);
+
+            if (!id || !name || price <= 0 || quantity <= 0) {
+                showError("Please fill all fields correctly");
+                return;
+            }
+
+            if (allProducts.find(p => p.id === id)) {
+                showError("Product ID already exists!");
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/products", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id, name, price, quantity })
+                });
+
+                if (!res.ok) {
+                    const error = await res.json();
+                    throw new Error(error.error || "Failed to add product");
+                }
+                
+                await loadData();
+                showSuccess("Product added successfully! Data saved to backend.");
+                e.target.reset();
+                document.getElementById("productId").focus();
+            } catch (error) {
+                console.error("Error:", error);
+                showError("Failed to add product: " + error.message);
+            }
+        }
+
+        function showSuccess(msg) {
+            const successMsg = document.getElementById("successMsg");
+            successMsg.textContent = msg;
+            successMsg.style.display = "block";
+            setTimeout(() => successMsg.style.display = "none", 3000);
+        }
+
+        function showError(msg) {
+            const errorMsg = document.getElementById("errorMsg");
+            errorMsg.textContent = msg;
+            errorMsg.style.display = "block";
+            setTimeout(() => errorMsg.style.display = "none", 3000);
+        }
+
+        loadData();
+    </script>
+</body>
+</html>

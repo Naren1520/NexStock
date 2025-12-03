@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexStock - Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <script src="profile-icon.js"></script>
+    <div class="container">
+        <div class="header">
+            <h1>📈 Analytics</h1>
+            <p>Advanced insights and statistics about your inventory</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="tab-btn" onclick="window.location.href='main.html'">Home</button>
+            <button class="tab-btn" onclick="window.location.href='dashboard.html'">Dashboard</button>
+            <button class="tab-btn" onclick="window.location.href='products.html'">Products</button>
+            <button class="tab-btn" onclick="window.location.href='add-product.html'">Add Product</button>
+            <button class="tab-btn" onclick="window.location.href='search.html'">Search</button>
+            <button class="tab-btn active">Analytics</button>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-container">
+                <h3>Product Distribution by Price</h3>
+                <canvas id="distributionChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3>Top 5 Most Expensive Products</h3>
+                <canvas id="topPriceChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3>Top 5 Most Stocked Products</h3>
+                <canvas id="topQuantityChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3>Inventory Value by Product</h3>
+                <canvas id="valueChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p> Developed by Naren S J</p>
+        <p class="footer-copyright">NexStock © 2025</p>
+    </footer>
+    
+    <script>
+        console.log('Analytics page script loaded. Chart global:', typeof Chart);
+        let allProducts = [];
+        let distributionChart, topPriceChart, topQuantityChart, valueChart;
+        console.log('Analytics: script variables initialized');
+
+        async function loadData() {
+            try {
+                const res = await fetch("/api/products");
+                if (!res.ok) throw new Error("Failed to load inventory");
+                allProducts = await res.json();
+                updateCharts();
+            } catch (error) {
+                console.error("Error loading data:", error);
+            }
+        }
+
+        function updateCharts() {
+            if (allProducts.length === 0) return;
+
+            // Distribution Chart
+            const distributionCtx = document.getElementById("distributionChart").getContext("2d");
+            if (distributionChart) distributionChart.destroy();
+            const priceRanges = ["₹0-50", "₹50-100", "₹100-200", "₹200+"];
+            const priceCount = [0, 0, 0, 0];
+            allProducts.forEach(p => {
+                if (p.price < 50) priceCount[0]++;
+                else if (p.price < 100) priceCount[1]++;
+                else if (p.price < 200) priceCount[2]++;
+                else priceCount[3]++;
+            });
+            distributionChart = new Chart(distributionCtx, {
+                type: "pie",
+                data: {
+                    labels: priceRanges,
+                    datasets: [{
+                        data: priceCount,
+                        backgroundColor: ["#667eea", "#764ba2", "#f093fb", "#fa709a"]
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    plugins: { 
+                        legend: { position: "bottom" },
+                        title: { display: false }
+                    } 
+                }
+            });
+
+            // Top Price Chart
+            const sorted = [...allProducts].sort((a, b) => b.price - a.price).slice(0, 5);
+            const topPriceCtx = document.getElementById("topPriceChart").getContext("2d");
+            if (topPriceChart) topPriceChart.destroy();
+            topPriceChart = new Chart(topPriceCtx, {
+                type: "bar",
+                data: {
+                    labels: sorted.map(p => p.name),
+                    datasets: [{
+                        label: "Price (₹)",
+                        data: sorted.map(p => p.price),
+                        backgroundColor: "#2196F3"
+                    }]
+                },
+                options: { 
+                    indexAxis: "y", 
+                    responsive: true, 
+                    plugins: { 
+                        legend: { display: false },
+                        title: { display: false }
+                    } 
+                }
+            });
+
+            // Top Quantity Chart
+            const topQty = [...allProducts].sort((a, b) => b.quantity - a.quantity).slice(0, 5);
+            const topQuantityCtx = document.getElementById("topQuantityChart").getContext("2d");
+            if (topQuantityChart) topQuantityChart.destroy();
+            topQuantityChart = new Chart(topQuantityCtx, {
+                type: "bar",
+                data: {
+                    labels: topQty.map(p => p.name),
+                    datasets: [{
+                        label: "Quantity",
+                        data: topQty.map(p => p.quantity),
+                        backgroundColor: "#ff9800"
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    plugins: { 
+                        legend: { display: false },
+                        title: { display: false }
+                    } 
+                }
+            });
+
+            // Value Chart
+            const valueCtx = document.getElementById("valueChart").getContext("2d");
+            if (valueChart) valueChart.destroy();
+            valueChart = new Chart(valueCtx, {
+                type: "line",
+                data: {
+                    labels: allProducts.map(p => p.name),
+                    datasets: [{
+                        label: "Inventory Value (₹)",
+                        data: allProducts.map(p => p.price * p.quantity),
+                        borderColor: "#667eea",
+                        backgroundColor: "rgba(102, 126, 234, 0.1)",
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    plugins: { 
+                        legend: { display: true },
+                        title: { display: false }
+                    } 
+                }
+            });
+        }
+
+        loadData();
+    </script>
+</body>
+</html>

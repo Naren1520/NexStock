@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexStock - Product Inventory System</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <script src="profile-icon.js"></script>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Dashboard</h1>
+            <p>Real-time inventory statistics and analytics</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="tab-btn" onclick="window.location.href='main.html'">Home</button>
+            <button class="tab-btn active">Dashboard</button>
+            <button class="tab-btn" onclick="window.location.href='products.html'">Products</button>
+            <button class="tab-btn" onclick="window.location.href='add-product.html'">Add Product</button>
+            <button class="tab-btn" onclick="window.location.href='search.html'">Search</button>
+            <button class="tab-btn" onclick="window.location.href='analytics.html'">Analytics</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Products</div>
+                <div class="stat-value" id="totalProducts">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Inventory Value</div>
+                <div class="stat-value" id="totalValue">₹0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Quantity</div>
+                <div class="stat-value" id="totalQuantity">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Average Price</div>
+                <div class="stat-value" id="avgPrice">₹0</div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-container">
+                <h3>Product Prices Distribution</h3>
+                <canvas id="priceChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3>Product Quantities</h3>
+                <canvas id="quantityChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Developed by Naren S J</p>
+        <p style="font-size: 0.9em; margin-top: 10px; color: rgba(255, 255, 255, 0.8);">NexStock © 2025</p>
+    </footer>
+    <script>
+        let allProducts = [];
+        let priceChart, quantityChart;
+
+        async function loadData() {
+            try {
+                const res = await fetch("/api/products");
+                if (!res.ok) throw new Error("Failed to load inventory");
+                allProducts = await res.json();
+                updateDashboard();
+                updateCharts();
+            } catch (error) {
+                console.error("Error loading data:", error);
+            }
+        }
+
+        function updateDashboard() {
+            const total = allProducts.length;
+            const totalValue = allProducts.reduce((sum, p) => sum + (p.price * p.quantity), 0);
+            const totalQty = allProducts.reduce((sum, p) => sum + p.quantity, 0);
+            const avgPrice = total > 0 ? allProducts.reduce((sum, p) => sum + p.price, 0) / total : 0;
+
+            document.getElementById("totalProducts").textContent = total;
+            document.getElementById("totalValue").textContent = `₹${totalValue.toFixed(2)}`;
+            document.getElementById("totalQuantity").textContent = totalQty;
+            document.getElementById("avgPrice").textContent = `₹${avgPrice.toFixed(2)}`;
+        }
+
+        function updateCharts() {
+            if (allProducts.length === 0) return;
+
+            // Price Chart
+            const priceCtx = document.getElementById("priceChart").getContext("2d");
+            if (priceChart) priceChart.destroy();
+            priceChart = new Chart(priceCtx, {
+                type: "doughnut",
+                data: {
+                    labels: allProducts.map(p => p.name),
+                    datasets: [{
+                        data: allProducts.map(p => p.price),
+                        backgroundColor: [
+                            "#667eea", "#764ba2", "#f093fb", "#4facfe", "#00f2fe",
+                            "#43e97b", "#fa709a", "#fee140", "#30b0fe", "#eb3b5a"
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: "right" },
+                        title: { display: false }
+                    }
+                }
+            });
+
+            // Quantity Chart
+            const quantityCtx = document.getElementById("quantityChart").getContext("2d");
+            if (quantityChart) quantityChart.destroy();
+            quantityChart = new Chart(quantityCtx, {
+                type: "bar",
+                data: {
+                    labels: allProducts.map(p => p.name),
+                    datasets: [{
+                        label: "Quantity",
+                        data: allProducts.map(p => p.quantity),
+                        backgroundColor: "#4caf50"
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    indexAxis: "y",
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: false }
+                    }
+                }
+            });
+        }
+
+        loadData();
+    </script>
+</body>
+</html>

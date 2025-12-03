@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexStack - Rentals</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <script src="profile-icon.js"></script>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Rental Transactions</h1>
+            <p>View and manage all product rental records</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="tab-btn" onclick="window.location.href='main.html'">Home</button>
+            <button class="tab-btn" onclick="window.location.href='dashboard.html'">Dashboard</button>
+            <button class="tab-btn" onclick="window.location.href='products.html'">Products</button>
+            <button class="tab-btn active">Rentals</button>
+            <button class="tab-btn" onclick="window.location.href='analytics.html'">Analytics</button>
+        </div>
+
+        <div class="card">
+            <div class="filter-buttons">
+                <button class="btn-primary btn-sm" onclick="filterRentals('all')">All</button>
+                <button class="btn-primary btn-sm" onclick="filterRentals('active')">Active</button>
+                <button class="btn-primary btn-sm" onclick="filterRentals('returned')">Returned</button>
+            </div>
+
+            <table id="table">
+                <thead>
+                    <tr>
+                        <th>Rental ID</th>
+                        <th>Product</th>
+                        <th>Renter Name</th>
+                        <th>Phone</th>
+                        <th>Rent Date</th>
+                        <th>Return Date</th>
+                        <th>Amount (₹)</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="body"></tbody>
+            </table>
+            <div id="empty-msg" class="empty-state">No rental records found</div>
+        </div>
+
+        <!-- Rental Details Modal -->
+        <div id="detailsModal" class="modal">
+            <div class="modal-content modal-large">
+                <span class="close-btn" onclick="closeDetailsModal()">&times;</span>
+                <div class="modal-header">Rental Details</div>
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <label>Rental ID</label>
+                        <p id="detailRentalId">-</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Product Name</label>
+                        <p id="detailProductName">-</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Renter Name</label>
+                        <p id="detailRenterName">-</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Phone Number</label>
+                        <p id="detailPhone">-</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Address</label>
+                        <p id="detailAddress">-</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Rent Date</label>
+                        <p id="detailRentDate">-</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Return Date</label>
+                        <p id="detailReturnDate">-</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Amount Paid</label>
+                        <p id="detailAmount">-</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Status</label>
+                        <p id="detailStatus">-</p>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn-warning" id="returnBtn" onclick="markAsReturned()">Mark as Returned</button>
+                    <button class="btn-secondary" onclick="closeDetailsModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Developed by Naren S J</p>
+        <p class="footer-copyright">NexStock © 2025</p>
+    </footer>
+    <script>
+        let allRentals = [];
+        let currentFilter = 'all';
+
+        async function loadRentals() {
+            try {
+                const res = await fetch("/api/rentals");
+                if (!res.ok) throw new Error("Failed to load rentals");
+                allRentals = await res.json();
+                displayRentals();
+            } catch (error) {
+                console.error("Error loading rentals:", error);
+                document.getElementById("empty-msg").style.display = "block";
+            }
+        }
+
+        function displayRentals() {
+            const tbody = document.getElementById("body");
+            const emptyMsg = document.getElementById("empty-msg");
+            
+            let filtered = allRentals;
+            if (currentFilter !== 'all') {
+                filtered = allRentals.filter(r => r.status === currentFilter);
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = "";
+                emptyMsg.style.display = "block";
+                return;
+            }
+
+            emptyMsg.style.display = "none";
+            tbody.innerHTML = filtered.map(r => `
+                <tr>
+                    <td>${r.rentalId}</td>
+                    <td>${r.productName}</td>
+                    <td>${r.renterName}</td>
+                    <td>${r.phoneNumber}</td>
+                    <td>${r.rentDate}</td>
+                    <td>${r.returnDate}</td>
+                    <td>₹${r.amountPaid.toFixed(2)}</td>
+                    <td>
+                        <span class="status-badge ${r.status === 'active' ? 'status-active' : 'status-returned'}">
+                            ${r.status.toUpperCase()}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn-info btn-sm" onclick="openDetailsModal(${r.rentalId})">View</button>
+                        ${r.status === 'active' ? `<button class="btn-warning btn-sm" onclick="markAsReturned(${r.rentalId})">Return</button>` : ''}
+                    </td>
+                </tr>
+            `).join("");
+        }
+
+        function filterRentals(status) {
+            currentFilter = status;
+            displayRentals();
+        }
+
+        function openDetailsModal(rentalId) {
+            const rental = allRentals.find(r => r.rentalId === rentalId);
+            if (rental) {
+                document.getElementById("detailRentalId").innerText = rental.rentalId;
+                document.getElementById("detailProductName").innerText = rental.productName;
+                document.getElementById("detailRenterName").innerText = rental.renterName;
+                document.getElementById("detailPhone").innerText = rental.phoneNumber;
+                document.getElementById("detailAddress").innerText = rental.address;
+                document.getElementById("detailRentDate").innerText = rental.rentDate;
+                document.getElementById("detailReturnDate").innerText = rental.returnDate;
+                document.getElementById("detailAmount").innerText = "₹" + rental.amountPaid.toFixed(2);
+                document.getElementById("detailStatus").innerText = rental.status.toUpperCase();
+                
+                const returnBtn = document.getElementById("returnBtn");
+                if (rental.status === 'active') {
+                    returnBtn.style.display = 'block';
+                    returnBtn.dataset.rentalId = rentalId;
+                } else {
+                    returnBtn.style.display = 'none';
+                }
+                
+                document.getElementById("detailsModal").classList.add("active");
+            }
+        }
+
+        function closeDetailsModal() {
+            document.getElementById("detailsModal").classList.remove("active");
+        }
+
+        async function markAsReturned(rentalId) {
+            // Support being called from the list (with param) or from the details modal button (no param)
+            if (!rentalId) {
+                const btn = document.getElementById('returnBtn');
+                if (btn && btn.dataset && btn.dataset.rentalId) {
+                    rentalId = parseInt(btn.dataset.rentalId);
+                }
+            }
+
+            const rental = allRentals.find(r => r.rentalId === rentalId);
+            if (!rental) return;
+
+            if (confirm(`Mark rental for "${rental.productName}" from ${rental.renterName} as returned?`)) {
+                try {
+                    const res = await fetch("/api/rentals/return", {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ rentalId })
+                    });
+
+                    if (!res.ok) {
+                        const error = await res.json();
+                        throw new Error(error.error || "Failed to update rental");
+                    }
+
+                    await loadRentals();
+                    closeDetailsModal();
+                    alert("Rental marked as returned!");
+                } catch (error) {
+                    console.error("Error:", error);
+                    alert("Failed to update rental: " + error.message);
+                }
+            }
+        }
+
+        // Load rentals on page load
+        loadRentals();
+    </script>
+</body>
+</html>

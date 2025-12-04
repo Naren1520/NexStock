@@ -300,9 +300,9 @@ function updateDashboard() {
 // 7. CHART OPERATIONS
 
 
-/**
- * Update all charts with current product data
- */
+
+// Update all charts with current product data
+
 function updateCharts() {
     if (allProducts.length === 0) return;
 
@@ -314,9 +314,7 @@ function updateCharts() {
     createValueChart();
 }
 
-/**
- * Create/Update Price Distribution Chart (Doughnut)
- */
+// Create/Update Price Distribution Chart (Doughnut)
 function createPriceChart() {
     const priceCtx = document.getElementById("priceChart").getContext("2d");
     if (priceChart) priceChart.destroy();
@@ -342,9 +340,8 @@ function createPriceChart() {
     });
 }
 
-/**
- * Create/Update Quantity Chart (Bar)
- */
+// Create/Update Quantity Chart (Bar)
+ 
 function createQuantityChart() {
     const quantityCtx = document.getElementById("quantityChart").getContext("2d");
     if (quantityChart) quantityChart.destroy();
@@ -369,9 +366,9 @@ function createQuantityChart() {
     });
 }
 
-/**
- * Create/Update Distribution Chart (Pie)
- */
+
+//Create/Update Distribution Chart (Pie)
+
 function createDistributionChart() {
     const distributionCtx = document.getElementById("distributionChart").getContext("2d");
     if (distributionChart) distributionChart.destroy();
@@ -396,9 +393,9 @@ function createDistributionChart() {
     });
 }
 
-/**
- * Create/Update Top Price Chart (Horizontal Bar)
- */
+
+//Create/Update Top Price Chart (Horizontal Bar)
+
 function createTopPriceChart() {
     const sorted = [...allProducts].sort((a, b) => b.price - a.price).slice(0, 5);
     const topPriceCtx = document.getElementById("topPriceChart").getContext("2d");
@@ -417,9 +414,9 @@ function createTopPriceChart() {
     });
 }
 
-/**
- * Create/Update Top Quantity Chart (Bar)
- */
+
+//Create/Update Top Quantity Chart (Bar)
+
 function createTopQuantityChart() {
     const topQty = [...allProducts].sort((a, b) => b.quantity - a.quantity).slice(0, 5);
     const topQuantityCtx = document.getElementById("topQuantityChart").getContext("2d");
@@ -438,9 +435,8 @@ function createTopQuantityChart() {
     });
 }
 
-/**
- * Create/Update Value Chart (Line)
- */
+//Create/Update Value Chart (Line)
+
 function createValueChart() {
     const valueCtx = document.getElementById("valueChart").getContext("2d");
     if (valueChart) valueChart.destroy();
@@ -462,9 +458,8 @@ function createValueChart() {
     });
 }
 
-// ==========================================
 // 8. UI & MESSAGING
-// ==========================================
+
 
 /**
  * Show success message
@@ -492,9 +487,8 @@ function showError(msg) {
     }
 }
 
-/**
- * Initialize tab switching functionality
- */
+
+// Initialize tab switching functionality
 function initTabSwitching() {
     document.querySelectorAll(".tab-btn").forEach(btn => {
         btn.addEventListener("click", () => {
@@ -506,13 +500,11 @@ function initTabSwitching() {
     });
 }
 
-// ==========================================
 // 9. INITIALIZATION
-// ==========================================
 
-/**
- * Initialize application on page load
- */
+
+// Initialize application on page load
+
 document.addEventListener("DOMContentLoaded", function() {
     loadData();
     initTabSwitching();

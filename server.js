@@ -431,7 +431,43 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    fs.readFile(filePath, 'utf8', (err, data) => {
+    const ext = path.extname(filePath);
+    let contentType = 'text/html';
+    let isBinary = false;
+    
+    switch (ext) {
+        case '.js':
+            contentType = 'application/javascript';
+            break;
+        case '.css':
+            contentType = 'text/css';
+            break;
+        case '.json':
+            contentType = 'application/json';
+            break;
+        case '.png':
+            contentType = 'image/png';
+            isBinary = true;
+            break;
+        case '.jpg':
+        case '.jpeg':
+            contentType = 'image/jpeg';
+            isBinary = true;
+            break;
+        case '.gif':
+            contentType = 'image/gif';
+            isBinary = true;
+            break;
+        case '.svg':
+            contentType = 'image/svg+xml';
+            break;
+        case '.ico':
+            contentType = 'image/x-icon';
+            isBinary = true;
+            break;
+    }
+
+    fs.readFile(filePath, isBinary ? null : 'utf8', (err, data) => {
         if (err) {
             if (err.code === 'ENOENT' && path.extname(filePath) === '') {
                 fs.readFile(path.join(__dirname, 'frontend', 'index.html'), 'utf8', (err2, data2) => {
@@ -449,31 +485,6 @@ const server = http.createServer((req, res) => {
             res.writeHead(404);
             res.end('File not found');
             return;
-        }
-
-        const ext = path.extname(filePath);
-        let contentType = 'text/html';
-        
-        switch (ext) {
-            case '.js':
-                contentType = 'application/javascript';
-                break;
-            case '.css':
-                contentType = 'text/css';
-                break;
-            case '.json':
-                contentType = 'application/json';
-                break;
-            case '.png':
-                contentType = 'image/png';
-                break;
-            case '.jpg':
-            case '.jpeg':
-                contentType = 'image/jpeg';
-                break;
-            case '.svg':
-                contentType = 'image/svg+xml';
-                break;
         }
 
         res.writeHead(200, { 'Content-Type': contentType });

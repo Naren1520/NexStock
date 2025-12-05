@@ -593,12 +593,6 @@
       "name": "The Go Programming Language",
       "price": 4606.13,
       "quantity": 18
-    },
-    {
-      "id": 1000,
-      "name": "iphone17promax",
-      "price": 100,
-      "quantity": 5
     }
   ],
   "rentals": [],

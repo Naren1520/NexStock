@@ -22,7 +22,7 @@ function readInventory() {
     }
 }
 
-// Utility function to write inventory.json
+//  function to write inventory.json
 function writeInventory(inventoryData) {
     try {
         fs.writeFileSync(INVENTORY_FILE, JSON.stringify(inventoryData, null, 2), 'utf8');

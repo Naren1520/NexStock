@@ -1,7 +1,7 @@
 {
   "name": "nexstock",
   "version": "1.0.0",
-  "description": "Enterprise-Grade Inventory Management System",
+  "description": "Inventory Management System",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

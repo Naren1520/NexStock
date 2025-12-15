@@ -760,7 +760,7 @@
 
         function renderWorkflowStep(operationId) {
             // Workflow diagram is now displayed via iframe
-            // No embedded rendering needed
+            
         }
 
         // Back button function
@@ -768,7 +768,7 @@
             window.location.href = '/main.html';
         }
 
-        // Set flow diagram image (user will provide image)
+        // Set flow diagram image 
         function setFlowDiagramImage(imagePath) {
             const content = document.getElementById('flowDiagramContent');
             content.innerHTML = `<img src="${imagePath}" alt="Project Flow Diagram" class="diagram-image">`;

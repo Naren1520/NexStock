@@ -1,12 +1,6 @@
 {
   "products": [
     {
-      "id": 1,
-      "name": "Introduction to Java",
-      "price": 2999,
-      "quantity": 84
-    },
-    {
       "id": 2,
       "name": "The Pragmatic Programmer",
       "price": 7577.11,
@@ -15,7 +9,7 @@
     {
       "id": 3,
       "name": "Code Complete",
-      "price": 2681.19,
+      "price": 49,
       "quantity": 136
     },
     {
@@ -33,7 +27,7 @@
     {
       "id": 6,
       "name": "Working Effectively with Legacy Code",
-      "price": 3426.64,
+      "price": 199,
       "quantity": 73
     },
     {

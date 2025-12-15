@@ -1,4 +1,4 @@
-// AI Chatbot using Gemini API
+
 class AIChapbot {
     constructor() {
         this.apiKey = null;
@@ -83,6 +83,11 @@ class AIChapbot {
         if (window) {
             window.classList.toggle('open');
             if (window.classList.contains('open')) {
+                // Show welcome message if no messages exist
+                const messagesContainer = document.getElementById('chatbot-messages');
+                if (messagesContainer.children.length === 0) {
+                    this.addMessageToUI('bot', 'How can NexStock Ai Help You');
+                }
                 document.getElementById('chatbot-input').focus();
             }
         }

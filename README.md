@@ -36,7 +36,7 @@ The project is built to show how **pure C algorithms** can be integrated with mo
 ┌─────────────────────────────────────────────────────────────┐
 │                    USER BROWSER                             │
 │  (HTML/CSS/JavaScript Frontend Interface)                   │
-│                                                              │
+│                                                             │
 │  - Dashboard with Charts                                    │
 │  - Product Management                                       │
 │  - Rental Management                                        │
@@ -44,10 +44,10 @@ The project is built to show how **pure C algorithms** can be integrated with mo
 └──────────────────────┬──────────────────────────────────────┘
                        │ HTTP Requests (JSON)
                        ↓
-┌──────────────────────────────────────────────────────────────┐
-│                    NODE.JS SERVER                            │
-│  (server.js - Port 8080)                                     │
-│                                                              │
+┌─────────────────────────────────────────────────────────────┐
+│                    NODE.JS SERVER                           │
+│  (server.js - Port 8080)                                    │
+│                                                             │
 │  - Handles HTTP requests                                    │
 │  - Routes to C backend logic                                │
 │  - Returns JSON responses                                   │
@@ -55,16 +55,16 @@ The project is built to show how **pure C algorithms** can be integrated with mo
 └──────────────────────┬──────────────────────────────────────┘
                        │ Function Calls
                        ↓
-┌──────────────────────────────────────────────────────────────┐
-│                C BACKEND (c-backend.js)                      │
-│  (Node.js module implementing C logic)                       │
-│                                                              │
-│  - addProduct()        - sellProduct()                       │
-│  - deleteProduct()     - recordRental()                      │
+┌─────────────────────────────────────────────────────────────┐
+│                C BACKEND (c-backend.js)                     │
+│  (Node.js module implementing C logic)                      │
+│                                                             │
+│  - addProduct()        - sellProduct()                      │
+│  - deleteProduct()     - recordRental()                     │
 │  - updateProduct()     - markRentalReturned()               │
-│  - searchProduct()     - getAllRentals()                     │
-│  - sortByID()          - readInventory()                     │
-│  - sortByName()        - writeInventory()                    │
+│  - searchProduct()     - getAllRentals()                    │
+│  - sortByID()          - readInventory()                    │
+│  - sortByName()        - writeInventory()                   │
 │  - sortByPrice()                                            │
 └──────────────────────┬──────────────────────────────────────┘
                        │ File Read/Write
@@ -78,7 +78,7 @@ The project is built to show how **pure C algorithms** can be integrated with mo
 │      ...                                                     │
 │    ],                                                        │
 │    "rentals": [                                              │
-│      {rentalId, productId, renterName, ...},                │
+│      {rentalId, productId, renterName, ...},                 │
 │      ...                                                     │
 │    ]                                                         │
 │  }                                                           │

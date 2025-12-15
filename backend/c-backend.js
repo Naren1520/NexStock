@@ -43,7 +43,7 @@ function writeInventory(inventoryData) {
 function addProduct(id, name, price, quantity) {
     const inventory = readInventory();
     
-    // Check if ID already exists (C backend validation)
+    // Check if ID already exists 
     if (inventory.products.find(p => p.id === parseInt(id))) {
         return { success: false, error: 'Product ID already exists' };
     }
@@ -82,9 +82,9 @@ function deleteProduct(id) {
     }
 }
 
-/**
- * Update a product using C backend logic
- */
+
+//Update a product using C backend logic
+
 function updateProduct(id, name, price, quantity) {
     const inventory = readInventory();
     const productIndex = inventory.products.findIndex(p => p.id === parseInt(id));
@@ -107,9 +107,9 @@ function updateProduct(id, name, price, quantity) {
     }
 }
 
-/**
- * Sell a product (reduce quantity) using C backend logic
- */
+
+//Sell a product
+
 function sellProduct(id, qty) {
     const inventory = readInventory();
     const productIndex = inventory.products.findIndex(p => p.id === parseInt(id));
@@ -132,7 +132,7 @@ function sellProduct(id, qty) {
 }
 
 /**
- * Sort products by ID (C backend algorithm)
+ * Sort products by ID 
  */
 function sortByID() {
     const inventory = readInventory();
@@ -152,7 +152,7 @@ function sortByName() {
 }
 
 /**
- * Sort products by price (C backend algorithm)
+ * Sort products by price
  */
 function sortByPrice() {
     const inventory = readInventory();
@@ -162,7 +162,7 @@ function sortByPrice() {
 }
 
 /**
- * Search product by ID (C backend logic)
+ * Search product by ID 
  */
 function searchProduct(id) {
     const inventory = readInventory();
@@ -176,7 +176,7 @@ function searchProduct(id) {
 }
 
 /**
- * Record a rental (C backend logic)
+ * Record a rental
  */
 function recordRental(productId, renterName, returnDate, phoneNumber, address, amountPaid) {
     const inventory = readInventory();
@@ -219,7 +219,7 @@ function recordRental(productId, renterName, returnDate, phoneNumber, address, a
 }
 
 /**
- * Mark rental as returned (C backend logic)
+ * Mark rental as returned
  */
 function markRentalReturned(rentalId) {
     const inventory = readInventory();

@@ -27,7 +27,7 @@
             z-index: 1;
         }
 
-        /* Animated gradient overlay */
+        
         .gradient-overlay {
             position: fixed;
             top: 0;
@@ -47,7 +47,7 @@
             50% { opacity: 0.5; }
         }
 
-        /* Main loader container */
+        
         .loader-container {
             position: fixed;
             top: 0;
@@ -67,7 +67,7 @@
             pointer-events: none;
         }
 
-        /* Content wrapper */
+        
         .loader-content {
             display: flex;
             flex-direction: column;
@@ -76,7 +76,7 @@
             position: relative;
         }
 
-        /* Animated circle background */
+        
         .circle-bg {
             position: absolute;
             width: 500px;
@@ -92,7 +92,7 @@
             50% { transform: scale(1.1); opacity: 0.8; }
         }
 
-        /* Logo container with animated rings */
+        
         .logo-container {
             position: relative;
             width: 180px;
@@ -135,7 +135,7 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Center icon */
+        
         .logo-icon {
             width: 80px;
             height: 80px;
@@ -163,7 +163,7 @@
             50% { transform: translateY(-10px); }
         }
 
-        /* Text content */
+        
         .text-content {
             display: flex;
             flex-direction: column;
@@ -252,7 +252,7 @@
             }
         }
 
-        /* Progress bar */
+        
         .progress-container {
             width: 300px;
             height: 3px;
@@ -291,7 +291,7 @@
             100% { background-position: 200% 50%; }
         }
 
-        /* Loading text */
+        
         .loading-text {
             color: rgba(255, 255, 255, 0.6);
             font-size: 14px;
@@ -304,7 +304,7 @@
             50% { opacity: 1; }
         }
 
-        /* Floating particles */
+        
         .particle {
             position: absolute;
             width: 4px;
@@ -327,7 +327,7 @@
             }
         }
 
-        /* Responsive design */
+        
         @media (max-width: 768px) {
             .nexstack-title {
                 font-size: 48px;
@@ -362,15 +362,15 @@
     <!-- Vanta.js Background -->
     <div id="vanta-element"></div>
     
-    <!-- Gradient Overlay -->
+    
     <div class="gradient-overlay"></div>
 
-    <!-- Loader -->
+    
     <div class="loader-container" id="loaderContainer">
         <div class="circle-bg"></div>
         
         <div class="loader-content">
-            <!-- Animated Logo -->
+            
             <div class="logo-container">
                 <div class="ring"></div>
                 <div class="ring"></div>
@@ -386,7 +386,7 @@
                 <p class="branding-text">Crafted by Naren S J</p>
             </div>
 
-            <!-- Progress Bar -->
+            
             <div class="progress-container">
                 <div class="progress-bar"></div>
             </div>
@@ -399,6 +399,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.globe.min.js"></script>
     <script>
+        
         // Initialize Vanta.js Globe
         VANTA.GLOBE({
             el: "#vanta-element",

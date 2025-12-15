@@ -9,14 +9,14 @@
 <body>
     <script src="profile-icon.js"></script>
     
-    <!-- Mobile Hamburger Menu -->
+    
     <button class="hamburger-btn" title="Toggle navigation menu" aria-label="Toggle navigation menu">
         <span></span>
         <span></span>
         <span></span>
     </button>
 
-    <!-- Mobile Navigation Menu -->
+    
     <nav class="mobile-nav">
         <a href="main.html">Home</a>
         <a href="dashboard.html">Dashboard</a>
@@ -27,7 +27,7 @@
         <a href="settings.html">Settings</a>
     </nav>
 
-    <!-- Mobile Navigation Overlay -->
+    
     <div class="mobile-nav-overlay"></div>
 
     <div class="container">
@@ -70,7 +70,7 @@
             <div id="empty-msg" class="empty-state">No rental records found</div>
         </div>
 
-        <!-- Rental Details Modal -->
+        
         <div id="detailsModal" class="modal">
             <div class="modal-content modal-large">
                 <span class="close-btn" onclick="closeDetailsModal()">&times;</span>
@@ -214,7 +214,7 @@
         }
 
         async function markAsReturned(rentalId) {
-            // Support being called from the list (with param) or from the details modal button (no param)
+            // Support being called from the list  or from the details modal button 
             if (!rentalId) {
                 const btn = document.getElementById('returnBtn');
                 if (btn && btn.dataset && btn.dataset.rentalId) {

@@ -70,18 +70,30 @@ int main() {
         scanf("%d", &choice);
 
         switch(choice) {
-            case 1: addProduct(); break;
-            case 2: displayProducts(); break;
-            case 3: searchProduct(); break;
-            case 4: sortByID(); break;
-            case 5: sortByName(); break;
-            case 6: sortByPrice(); break;
-            case 7: updateProduct(); break;
-            case 8: deleteProduct(); break;
-            case 9: sellProduct(); break;
-            case 10: recordRental(); break;
-            case 11: viewRentals(); break;
-            case 12: markReturnedRental(); break;
+            case 1: addProduct(); 
+            break;
+            case 2: displayProducts();
+             break;
+            case 3: searchProduct(); 
+            break;
+            case 4: sortByID(); 
+            break;
+            case 5: sortByName(); 
+            break;
+            case 6: sortByPrice(); 
+            break;
+            case 7: updateProduct(); 
+            break;
+            case 8: deleteProduct(); 
+            break;
+            case 9: sellProduct(); 
+            break;
+            case 10: recordRental(); 
+            break;
+            case 11: viewRentals(); 
+            break;
+            case 12: markReturnedRental(); 
+            break;
             case 13: 
                 saveToFile();
                 printf("Data saved. Exiting...\n");

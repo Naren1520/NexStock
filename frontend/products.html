@@ -9,14 +9,14 @@
 <body>
     <script src="profile-icon.js"></script>
     
-    <!-- Mobile Hamburger Menu -->
+    
     <button class="hamburger-btn" title="Toggle navigation menu" aria-label="Toggle navigation menu">
         <span></span>
         <span></span>
         <span></span>
     </button>
 
-    <!-- Mobile Navigation Menu -->
+    
     <nav class="mobile-nav">
         <a href="main.html">Home</a>
         <a href="dashboard.html">Dashboard</a>
@@ -27,7 +27,7 @@
         <a href="settings.html">Settings</a>
     </nav>
 
-    <!-- Mobile Navigation Overlay -->
+    
     <div class="mobile-nav-overlay"></div>
 
     <div class="container">
@@ -71,7 +71,7 @@
         </div>
     </div>
 
-    <!-- Edit Product Modal -->
+    
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal()">&times;</span>
@@ -99,7 +99,7 @@
         </div>
     </div>
 
-    <!-- Sell Product Modal -->
+    
     <div id="sellModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeSellModal()">&times;</span>
@@ -123,7 +123,7 @@
         </div>
     </div>
 
-    <!-- Rent Product Modal -->
+    
     <div id="rentModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeRentModal()">&times;</span>
@@ -165,6 +165,8 @@
         <p class="footer-copyright">NexStock © 2025</p>
     </footer>
     
+
+
     <script>
         let allProducts = [];
 
@@ -355,6 +357,9 @@
             if (product) {
                 document.getElementById("rentProductName").value = product.name;
                 document.getElementById("rentProductId").value = id;
+
+
+
                 // Clear form
                 document.getElementById("rentName").value = '';
                 document.getElementById("rentPhone").value = '';
@@ -407,6 +412,8 @@
                 const result = await res.json();
                 closeRentModal();
                 alert(`Rental recorded successfully!\nRental ID: ${result.rental.rentalId} (C Backend)`);
+
+                
                 // Redirect to rentals page after delay
                 setTimeout(() => {
                     window.location.href = 'rentals.html';

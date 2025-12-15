@@ -1,4 +1,4 @@
-// Mobile Menu Toggle Functionality
+//  Menu Toggle 
 document.addEventListener('DOMContentLoaded', function() {
     const hamburgerBtn = document.querySelector('.hamburger-btn');
     const mobileNav = document.querySelector('.mobile-nav');
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Close menu when a link is clicked
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
-            // Only close if it's a navigation link (not a button with onclick handlers)
+            // Only close if it's a navigation link 
             if (this.tagName === 'A' || !this.onclick) {
                 hamburgerBtn.classList.remove('active');
                 mobileNav.classList.remove('active');

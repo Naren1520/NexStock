@@ -10,14 +10,14 @@
 <body>
     <script src="profile-icon.js"></script>
     
-    <!-- Mobile Hamburger Menu -->
+    
     <button class="hamburger-btn" title="Toggle navigation menu" aria-label="Toggle navigation menu">
         <span></span>
         <span></span>
         <span></span>
     </button>
 
-    <!-- Mobile Navigation Menu -->
+    
     <nav class="mobile-nav">
         <a href="main.html">Home</a>
         <a href="dashboard.html">Dashboard</a>
@@ -28,7 +28,7 @@
         <a href="settings.html">Settings</a>
     </nav>
 
-    <!-- Mobile Navigation Overlay -->
+    
     <div class="mobile-nav-overlay"></div>
 
     <div class="container">
@@ -71,6 +71,8 @@
         <p class="footer-copyright">NexStock © 2025</p>
     </footer>
     
+
+
     <script>
         console.log('Analytics page script loaded. Chart global:', typeof Chart);
         let allProducts = [];
@@ -90,6 +92,7 @@
 
         function updateCharts() {
             if (allProducts.length === 0) return;
+
 
             // Distribution Chart
             const distributionCtx = document.getElementById("distributionChart").getContext("2d");
@@ -120,6 +123,7 @@
                     } 
                 }
             });
+
 
             // Top Price Chart
             const sorted = [...allProducts].sort((a, b) => b.price - a.price).slice(0, 5);
@@ -170,6 +174,7 @@
                 }
             });
 
+            
             // Value Chart
             const valueCtx = document.getElementById("valueChart").getContext("2d");
             if (valueChart) valueChart.destroy();

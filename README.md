@@ -3,7 +3,7 @@
 
 ---
 
-## 📚 Table of Contents
+## Table of Contents
 1. [Project Overview](#project-overview)
 2. [Architecture Explanation](#architecture-explanation)
 3. [C Data Structures](#c-data-structures)
@@ -16,7 +16,7 @@
 
 ---
 
-## 🎯 Project Overview
+## Project Overview
 
 **NexStock** is an advanced inventory management system that demonstrates the power of combining:
 - **C (Backend Logic)** - High-performance data processing
@@ -28,7 +28,7 @@ The project is built to show how **pure C algorithms** can be integrated with mo
 
 ---
 
-## 🏗️ Architecture Explanation
+## Architecture Explanation
 
 ### System Architecture Diagram
 
@@ -87,7 +87,7 @@ The project is built to show how **pure C algorithms** can be integrated with mo
 
 ---
 
-## 🔧 C Data Structures
+## C Data Structures
 
 ### 1. **Product Structure** (inventory.c)
 
@@ -148,7 +148,7 @@ rentals[0] = {
 
 ---
 
-## 🔄 How the System Works
+## How the System Works
 
 ### **Complete Data Flow Process**
 
@@ -200,7 +200,7 @@ User sees dashboard with data
 
 ---
 
-## 🔗 Frontend to Backend Flow
+## Frontend to Backend Flow
 
 ### **Example 1: Adding a Product**
 
@@ -411,7 +411,7 @@ function recordRental(productId, renterName, returnDate, phoneNumber, address, a
 
 ---
 
-## 📊 Complete User Journey
+## Complete User Journey
 
 ### **Scenario: Product Lifecycle**
 
@@ -547,7 +547,7 @@ Frontend: Updates rental status, redirects to rentals page
 
 ---
 
-## 💾 Data Storage Format
+##  Data Storage Format
 
 ### **inventory.json Structure**
 
@@ -586,7 +586,7 @@ Frontend: Updates rental status, redirects to rentals page
 
 ---
 
-## ⚡ How Algorithms Work
+##  How Algorithms Work
 
 ### **1. Add Product Algorithm**
 ```
@@ -648,7 +648,7 @@ Time Complexity: O(n) - linear search for product
 
 ---
 
-## 🏃 Installation & Setup
+##  Installation & Setup
 
 ### **Prerequisites**
 - Node.js (v18 or higher)
@@ -676,7 +676,7 @@ cd ..
 
 ---
 
-## 🚀 Running the Project
+## Running the Project
 
 ### **Method 1: Web Interface (Recommended)**
 ```bash
@@ -713,7 +713,7 @@ gcc -Wall -o inventory inventory.c
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 DatastructureProject/
@@ -747,7 +747,7 @@ DatastructureProject/
 
 ---
 
-## 🔐 Data Flow Diagram - Click to Action
+## Data Flow Diagram - Click to Action
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -826,7 +826,7 @@ DatastructureProject/
 
 ---
 
-## 🎓 Learning Resources
+## Learning Resources
 
 This project demonstrates:
 1. **C Data Structures** - Arrays, structs for real-world use
@@ -840,7 +840,7 @@ This project demonstrates:
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### **Port 8080 Already in Use**
 ```bash
@@ -877,7 +877,7 @@ npm start
 
 ---
 
-## 📝 Example Workflow
+## Example Workflow
 
 ### **Complete Scenario: Rental Management**
 
@@ -918,7 +918,7 @@ npm start
 
 ---
 
-## 🎯 Key Concepts
+## Key Concepts
 
 ### **Why C Backend?**
 - ✅ High performance for algorithms
@@ -946,7 +946,7 @@ npm start
 
 ---
 
-## 📊 Performance Characteristics
+##  Performance Characteristics
 
 | Operation | Time Complexity | Space Complexity |
 |-----------|-----------------|------------------|
@@ -959,7 +959,7 @@ npm start
 
 ---
 
-## ✅ Verification Checklist
+##  Verification Checklist
 
 - [x] C backend logic implemented
 - [x] Node.js server routing working
@@ -974,7 +974,7 @@ npm start
 
 ---
 
-## 📞 Support
+##  Support
 
 For issues or questions:
 1. Check terminal output for error messages
@@ -984,7 +984,7 @@ For issues or questions:
 
 ---
 
-## 👨‍💻 Developer Info
+##  Developer Info
 
 **Project Name:** NexStock - Inventory Management System  
 **Developer:** Naren S J  
@@ -992,15 +992,3 @@ For issues or questions:
 **Language:** C + JavaScript + HTML/CSS  
 **Framework:** Node.js (Express-less, vanilla HTTP)  
 **Database:** JSON file (No SQL needed)
-
----
-
-## 📄 License
-
-MIT License - Feel free to use and modify
-
----
-
-**Thank you for using NexStock! This is a complete C + Web integration project demonstrating real-world development practices.**
-
-🎉 **Happy Coding!** 🎉

@@ -497,6 +497,8 @@ static enum MHD_Result send_file(struct MHD_Connection *connection, const char *
     else if (strstr(path, ".css")) content_type = "text/css";
     else if (strstr(path, ".js")) content_type = "application/javascript";
     else if (strstr(path, ".json")) content_type = "application/json";
+    else if (strstr(path, ".xml")) content_type = "application/xml";
+    else if (strstr(path, ".txt")) content_type = "text/plain";
     else if (strstr(path, ".png")) content_type = "image/png";
     else if (strstr(path, ".jpg") || strstr(path, ".jpeg")) content_type = "image/jpeg";
 

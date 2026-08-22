@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Sitemap: https://nexstock-9pnw.onrender.com/sitemap.xml

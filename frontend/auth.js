@@ -1,5 +1,6 @@
 (function () {
     const originalFetch = window.fetch.bind(window);
+    const apiBaseUrl = (window.NEXSTOCK_API_BASE_URL || "").replace(/\/$/, "");
     const publicPaths = ["/login.html", "/api/auth/", "/api/chatbot-key"];
     const isPublic = () => publicPaths.some((path) => window.location.pathname.endsWith(path) || window.location.pathname.startsWith(path));
 
@@ -12,7 +13,10 @@
         const requestOptions = options ? { ...options, headers: new Headers(options.headers || {}) } : { headers: new Headers() };
         const token = localStorage.getItem("nexstock_token");
         if (token) requestOptions.headers.set("Authorization", `Bearer ${token}`);
-        return originalFetch(resource, requestOptions).then((response) => {
+        const requestUrl = typeof resource === "string" && apiBaseUrl && resource.startsWith("/api/")
+            ? `${apiBaseUrl}${resource}`
+            : resource;
+        return originalFetch(requestUrl, requestOptions).then((response) => {
             if (response.status === 401 && !isPublic()) {
                 localStorage.removeItem("nexstock_token");
                 localStorage.removeItem("nexstock_user");

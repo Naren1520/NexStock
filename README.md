@@ -46,7 +46,7 @@ The project is built to show how **pure C algorithms** can be integrated with mo
                        ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                    NODE.JS SERVER                           │
-│  (server.js - Port 8080)                                    │
+│  (inventory-api.c - Port 8040)                              │
 │                                                             │
 │  - Handles HTTP requests                                    │
 │  - Routes to C backend logic                                │
@@ -56,7 +56,7 @@ The project is built to show how **pure C algorithms** can be integrated with mo
                        │ Function Calls
                        ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                C BACKEND (c-backend.js)                     │
+│                C BACKEND (inventory-api.c)                   │
 │  (Node.js module implementing C logic)                      │
 │                                                             │
 │  - addProduct()        - sellProduct()                      │
@@ -174,7 +174,7 @@ Calls: cBackend.readInventory()
 Returns: Array of all products
 ```
 
-#### Step 3: **C Backend Logic (c-backend.js)**
+#### Step 3: **C Backend Logic (inventory-api.c)**
 ```
 readInventory() function:
          ↓
@@ -223,7 +223,7 @@ async function addProduct(e) {
 }
 ```
 
-#### Server receives POST /api/c/product/add (server.js)
+#### C server receives POST /api/c/product/add
 ```javascript
 if (pathname === '/api/c/product/add' && req.method === 'POST') {
     parseBody(req, (err, data) => {
@@ -241,7 +241,7 @@ if (pathname === '/api/c/product/add' && req.method === 'POST') {
 }
 ```
 
-#### C Backend Function (c-backend.js)
+#### C Backend Function (inventory-api.c)
 ```javascript
 function addProduct(id, name, price, quantity) {
     // Step 5: Read current inventory
@@ -305,7 +305,7 @@ Server receives GET /api/c/product/sort/name
 Calls cBackend.sortByName()
 ```
 
-#### C Backend Sorting Algorithm (c-backend.js)
+#### C Backend Sorting Algorithm (inventory-api.c)
 ```javascript
 function sortByName() {
     const inventory = readInventory();
@@ -350,7 +350,7 @@ Body: {
 }
 ```
 
-#### Server processes rental (server.js)
+#### C server processes rental
 ```javascript
 if (pathname === '/api/c/rental/record' && req.method === 'POST') {
     parseBody(req, (err, data) => {
@@ -366,7 +366,7 @@ if (pathname === '/api/c/rental/record' && req.method === 'POST') {
 }
 ```
 
-#### C Backend records rental (c-backend.js)
+#### C Backend records rental (inventory-api.c)
 ```javascript
 function recordRental(productId, renterName, returnDate, phoneNumber, address, amountPaid) {
     const inventory = readInventory();
@@ -660,29 +660,35 @@ Time Complexity: O(n) - linear search for product
 cd DatastructureProject
 ```
 
-### **Step 2: Install Dependencies**
+### **Step 2: Build the C Backend**
 ```bash
-npm install
-```
-
-This installs Node.js packages (no external dependencies needed).
-
-### **Step 3: Verify C Program**
-```bash
-cd backend
-gcc -o inventory inventory.c
-cd ..
+docker build -t nexstock-c-backend .
 ```
 
 ---
 
 ## Running the Project
 
-### **Method 1: Web Interface (Recommended)**
+### **C Backend Deployment (Render)**
+The deployed application runs from `backend/inventory-api.c`. It is a C HTTP server that serves the frontend, exposes the `/api/c/...` inventory and rental endpoints, and reads and writes `backend/inventory.json`. JavaScript is used by the browser chatbot only.
+
+Render uses the repository `Dockerfile` and `render.yaml`; set `GEMINI_API_KEY` as a Render environment variable. The service automatically uses Render's `PORT` value.
+
+To run the same service locally with Docker:
 ```bash
-npm start
+docker build -t nexstock-c-backend .
+docker run --rm --env-file .env -p 8040:8040 nexstock-c-backend
 ```
-Then open: `http://localhost:8080`
+Then open `http://localhost:8040`.
+
+Copy `.env.example` to `.env` and set `GEMINI_API_KEY`. Render environment variables are configured in the Render dashboard from the `render.yaml` definition.
+
+### **Method 1: Web Interface (C Backend)**
+```bash
+docker build -t nexstock-c-backend .
+docker run --rm -p 8040:8040 -e GEMINI_API_KEY=your_key nexstock-c-backend
+```
+Then open: `http://localhost:8040`
 
 **Features available:**
 - Dashboard with charts
@@ -690,26 +696,6 @@ Then open: `http://localhost:8080`
 - Rental management
 - Search & filter
 - Analytics
-
-### **Method 2: Interactive C Program**
-```bash
-cd backend
-.\inventory.exe
-```
-
-**Interactive menu for:**
-- Add/Update/Delete products
-- Sort products
-- Search products
-- Manage rentals
-- Save to JSON
-
-### **Method 3: Recompile C Code**
-```bash
-cd backend
-gcc -Wall -o inventory inventory.c
-.\inventory.exe
-```
 
 ---
 
@@ -719,14 +705,11 @@ gcc -Wall -o inventory inventory.c
 DatastructureProject/
 │
 ├── README.md                       ← This file
-├── package.json                    ← Node.js dependencies
-├── server.js                       ← Node.js server (HTTP handler)
+├── Dockerfile                      ← C backend container build
 │
 ├── backend/
 │   ├── inventory.c                 ← Pure C source code (algorithms)
-│   ├── inventory.exe               ← Compiled C executable
-│   ├── inventory-wrapper.c         ← C wrapper template
-│   ├── c-backend.js                ← C logic in JavaScript
+│   ├── inventory-api.c             ← C HTTP backend
 │   ├── inventory.json              ← Data storage (products + rentals)
 │   ├── inventory.txt               ← Backup file
 │   └── inventory.json.bak.*        ← Backups
@@ -764,7 +747,7 @@ DatastructureProject/
 │                        ↓ HTTP Request
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
-│  SERVER (server.js)                                         │
+│  C SERVER (inventory-api.c)                                 │
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │ Receives: POST /api/c/product/add                     │ │
 │  │ ↓                                                      │ │
@@ -781,7 +764,7 @@ DatastructureProject/
 │                        ↓ HTTP Response (JSON)
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
-│  C BACKEND (c-backend.js)                                   │
+│  C BACKEND (inventory-api.c)                                │
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │ addProduct(id, name, price, quantity)                │ │
 │  │ ↓                                                      │ │
@@ -842,13 +825,10 @@ This project demonstrates:
 
 ## Troubleshooting
 
-### **Port 8080 Already in Use**
+### **Port 8040 Already in Use**
 ```bash
-# Kill existing Node process
-Get-Process -Name node | Stop-Process -Force
-
-# Start server again
-npm start
+docker ps
+docker stop nexstock-c-backend-local
 ```
 
 ### **C Program Won't Compile**
@@ -856,11 +836,9 @@ npm start
 # Make sure GCC is installed
 gcc --version
 
-# Compile with warnings
-gcc -Wall -o inventory inventory.c
-
-# Run the program
-.\inventory.exe
+# Build and run the C service
+docker build -t nexstock-c-backend .
+docker run --rm --env-file .env -p 8040:8040 nexstock-c-backend
 ```
 
 ### **Changes Not Showing**
@@ -871,8 +849,8 @@ Ctrl+Shift+Delete
 # Reload page
 Ctrl+F5
 
-# Restart server
-npm start
+# Restart the Docker container
+docker restart nexstock-c-backend-local
 ```
 
 ---
@@ -977,10 +955,10 @@ npm start
 ##  Support
 
 For issues or questions:
-1. Check terminal output for error messages
+1. Check Docker logs for error messages
 2. Verify inventory.json exists and is valid JSON
-3. Ensure port 8080 is available
-4. Check that c-backend.js is in the backend folder
+3. Ensure port 8040 is available
+4. Check that inventory-api.c is present in the backend folder
 
 ---
 
@@ -990,5 +968,5 @@ For issues or questions:
 **Developer:** Naren S J  
 **Date:** December 2025  
 **Language:** C + JavaScript + HTML/CSS  
-**Framework:** Node.js (Express-less, vanilla HTTP)  
+**Framework:** C HTTP server (libmicrohttpd)
 **Database:** JSON file (No SQL needed)

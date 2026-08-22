@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: nexstock-c-backend
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/c/products
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexStock - Sign in</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .auth-shell { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+        .auth-card { width: min(420px, 100%); background: var(--bg-card); border-radius: var(--radius-md); padding: 32px; box-shadow: var(--shadow-xl); }
+        .auth-card h1 { margin-bottom: 8px; }
+        .auth-card p { color: var(--text-secondary); margin-bottom: 24px; }
+        .auth-card label { display: block; margin: 16px 0 6px; font-weight: 600; }
+        .auth-card input { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font: inherit; }
+        .auth-card button { width: 100%; margin-top: 22px; padding: 12px; border: 0; border-radius: var(--radius-sm); background: var(--primary-dark); color: var(--text-white); font: inherit; font-weight: 700; cursor: pointer; }
+        .auth-toggle { display: block; margin: 18px auto 0; border: 0; background: transparent; color: var(--primary-dark); cursor: pointer; }
+        .auth-error { color: var(--danger-color); min-height: 20px; margin-top: 12px; }
+    </style>
+</head>
+<body>
+    <main class="auth-shell">
+        <form class="auth-card" id="auth-form">
+            <h1 id="auth-title">Sign in to NexStock</h1>
+            <p id="auth-subtitle">Manage your inventory securely.</p>
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" autocomplete="email" required>
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" minlength="8" autocomplete="current-password" required>
+            <button id="submit-button" type="submit">Sign in</button>
+            <div class="auth-error" id="auth-error" role="alert"></div>
+            <button class="auth-toggle" id="auth-toggle" type="button">Create an account</button>
+        </form>
+    </main>
+    <script src="auth.js"></script>
+    <script>
+        const form = document.getElementById("auth-form");
+        const toggle = document.getElementById("auth-toggle");
+        const title = document.getElementById("auth-title");
+        const subtitle = document.getElementById("auth-subtitle");
+        const submit = document.getElementById("submit-button");
+        const error = document.getElementById("auth-error");
+        let signup = false;
+
+        toggle.addEventListener("click", () => {
+            signup = !signup;
+            title.textContent = signup ? "Create your NexStock account" : "Sign in to NexStock";
+            subtitle.textContent = signup ? "Use your email to get started." : "Manage your inventory securely.";
+            submit.textContent = signup ? "Create account" : "Sign in";
+            toggle.textContent = signup ? "Already have an account? Sign in" : "Create an account";
+            document.getElementById("password").autocomplete = signup ? "new-password" : "current-password";
+            error.textContent = "";
+        });
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            error.textContent = "";
+            try {
+                const response = await fetch(`/api/auth/${signup ? "signup" : "login"}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: form.email.value.trim(), password: form.password.value })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || "Authentication failed");
+                window.nexstockAuth.save(data);
+                window.location.replace("dashboard.html");
+            } catch (requestError) {
+                error.textContent = requestError.message;
+            }
+        });
+    </script>
+</body>
+</html>

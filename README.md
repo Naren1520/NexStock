@@ -1,55 +1,67 @@
 # NexStock - Inventory Management System
-## A Hybrid C + Node.js + Web Application
+## A C + Web Application
 
 ---
 
 ## Table of Contents
-1. [Project Overview](#project-overview)
-2. [Architecture Explanation](#architecture-explanation)
-3. [C Data Structures](#c-data-structures)
-4. [How the System Works](#how-the-system-works)
-5. [Frontend to Backend Flow](#frontend-to-backend-flow)
+NexStock is an inventory and rental management application with a C HTTP backend and a browser frontend. The backend serves the files in `frontend/`, implements the REST API in `backend/inventory-api.c`, and persists data in MongoDB. There is no Node.js backend.
 6. [Complete User Journey](#complete-user-journey)
 7. [API Endpoints](#api-endpoints)
-8. [Installation & Setup](#installation--setup)
-9. [Running the Project](#running-the-project)
+## Configuration
 
----
+Copy `.env.example` to `.env` and set:
 
-## Project Overview
+```text
+MONGODB_URI=mongodb+srv://username:password@cluster.example.mongodb.net/?retryWrites=true&w=majority
+MONGODB_DATABASE=nexstock
+GEMINI_API_KEY=your_gemini_key
+PORT=8040
+```
+
+`MONGODB_DATABASE` defaults to `nexstock`; Render supplies `PORT` automatically. The C process checks MongoDB connectivity at startup and exits if `MONGODB_URI` is missing or unreachable.
 
 **NexStock** is an advanced inventory management system that demonstrates the power of combining:
-- **C (Backend Logic)** - High-performance data processing
-- **Node.js (API Server)** - REST API handling
+Docker is the recommended local build because it supplies libmicrohttpd, cJSON, libmongoc, libbson, and OpenSSL:
+
+```bash
+docker build -t nexstock-c-backend .
+docker run --rm --env-file .env -p 8040:8040 nexstock-c-backend
+```
+
+Open `http://localhost:8040/login.html`. Render uses `Dockerfile` and `render.yaml`; configure the secret `MONGODB_URI` and `GEMINI_API_KEY` in the Render dashboard.
+- **C HTTP Server** - REST API handling and inventory logic
 - **JavaScript (Frontend)** - User interface
-- **JSON (Data Storage)** - Persistent data
+`POST /api/auth/signup` and `POST /api/auth/login` accept `{ "email": "...", "password": "..." }` and return `success`, `token`, and `user`. The frontend stores the token in `localStorage` and sends it as `Authorization: Bearer <token>`.
+
+All `/api/c/*` inventory and rental routes require a valid bearer token. `/api/auth/*` and `GET /api/chatbot-key` are public. Sessions live only in memory and are invalidated when the backend restarts.
 
 The project is built to show how **pure C algorithms** can be integrated with modern web technologies.
+Existing response contracts are preserved for:
 
----
-
-## Architecture Explanation
-
-### System Architecture Diagram
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    USER BROWSER                             │
+- `GET /api/c/products` and `GET /api/c/rentals`
+- `POST /api/c/product/add`
+- `PUT /api/c/product/update`
+- `DELETE /api/c/product/delete`
+- `POST /api/c/product/sell`
+- `GET /api/c/product/search/:id`
+- `GET /api/c/product/sort/:field`
+- `POST /api/c/rental/record`
+- `PUT /api/c/rental/return`
 │  (HTML/CSS/JavaScript Frontend Interface)                   │
 │                                                             │
-│  - Dashboard with Charts                                    │
-│  - Product Management                                       │
-│  - Rental Management                                        │
-│  - Search & Filter                                          │
-└──────────────────────┬──────────────────────────────────────┘
-                       │ HTTP Requests (JSON)
-                       ↓
-┌─────────────────────────────────────────────────────────────┐
-│                    NODE.JS SERVER                           │
-│  (inventory-api.c - Port 8040)                              │
+```text
+backend/inventory-api.c   C HTTP server, auth, MongoDB persistence
+backend/inventory.c       C data-structure reference implementation
+backend/inventory.json     Legacy seed/reference data; API persistence is MongoDB
+frontend/auth.js           Session guard and authenticated fetch wrapper
+frontend/login.html        Signup and login UI
+frontend/*.html            Browser application pages
+Dockerfile                 Multi-stage C build and runtime image
+render.yaml                Render service and environment configuration
+```
 │                                                             │
 │  - Handles HTTP requests                                    │
-│  - Routes to C backend logic                                │
+Check container logs first. Confirm that the MongoDB deployment permits the service network, the URI credentials are valid, and the database user can read and write the three collections. A missing or unreachable MongoDB URI prevents startup by design.
 │  - Returns JSON responses                                   │
 │  - Serves static files (HTML/CSS/JS)                        │
 └──────────────────────┬──────────────────────────────────────┘
@@ -57,7 +69,7 @@ The project is built to show how **pure C algorithms** can be integrated with mo
                        ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                C BACKEND (inventory-api.c)                   │
-│  (Node.js module implementing C logic)                      │
+│  (C server implementing inventory logic)                    │
 │                                                             │
 │  - addProduct()        - sellProduct()                      │
 │  - deleteProduct()     - recordRental()                     │
@@ -163,9 +175,9 @@ JavaScript loadData() function executes
 fetch('/api/c/products') - HTTP GET request
 ```
 
-#### Step 2: **Server Processing (Node.js)**
+#### Step 2: **Server Processing (C HTTP Server)**
 ```
-Node.js server receives: GET /api/c/products
+C server receives: GET /api/c/products
          ↓
 Matches route: if (pathname === '/api/c/products')
          ↓
@@ -260,7 +272,7 @@ function addProduct(id, name, price, quantity) {
         quantity: parseInt(quantity)
     });
 
-    // Step 8: Write back to inventory.json
+    // Step 8: Write back to MongoDB
     if (writeInventory(inventory)) {
         return { success: true, message: 'Product added' };
     }
@@ -549,7 +561,7 @@ Frontend: Updates rental status, redirects to rentals page
 
 ##  Data Storage Format
 
-### **inventory.json Structure**
+### **MongoDB Collection Structure**
 
 ```json
 {
@@ -651,7 +663,8 @@ Time Complexity: O(n) - linear search for product
 ##  Installation & Setup
 
 ### **Prerequisites**
-- Node.js (v18 or higher)
+- Docker
+- A MongoDB deployment (Atlas or self-hosted)
 - GCC compiler (for C compilation)
 - Git (optional)
 
@@ -670,9 +683,9 @@ docker build -t nexstock-c-backend .
 ## Running the Project
 
 ### **C Backend Deployment (Render)**
-The deployed application runs from `backend/inventory-api.c`. It is a C HTTP server that serves the frontend, exposes the `/api/c/...` inventory and rental endpoints, and reads and writes `backend/inventory.json`. JavaScript is used by the browser chatbot only.
+The deployed application runs from `backend/inventory-api.c`. It is a C HTTP server that serves the frontend, exposes the `/api/c/...` inventory and rental endpoints, and reads and writes MongoDB collections. JavaScript is used by the browser UI and chatbot only.
 
-Render uses the repository `Dockerfile` and `render.yaml`; set `GEMINI_API_KEY` as a Render environment variable. The service automatically uses Render's `PORT` value.
+Render uses the repository `Dockerfile` and `render.yaml`; set `MONGODB_URI`, `MONGODB_DATABASE`, and `GEMINI_API_KEY` as Render environment variables. The service automatically uses Render's `PORT` value.
 
 To run the same service locally with Docker:
 ```bash
@@ -681,7 +694,12 @@ docker run --rm --env-file .env -p 8040:8040 nexstock-c-backend
 ```
 Then open `http://localhost:8040`.
 
-Copy `.env.example` to `.env` and set `GEMINI_API_KEY`. Render environment variables are configured in the Render dashboard from the `render.yaml` definition.
+Copy `.env.example` to `.env` and set `MONGODB_URI`, `MONGODB_DATABASE`, and `GEMINI_API_KEY`. Render environment variables are configured in the Render dashboard from the `render.yaml` definition.
+
+### Authentication
+Open `/login.html` to create an account or sign in. Passwords are stored as SHA-256 hashes in the `users` collection. The browser stores the returned in-memory session token in `localStorage`; every `/api/c/*` request must include it as a bearer token. Auth sessions are intentionally lost when the C process restarts.
+
+Public endpoints are `POST /api/auth/signup`, `POST /api/auth/login`, and `GET /api/chatbot-key`. Products and rentals are stored in the `products` and `rentals` MongoDB collections.
 
 ### **Method 1: Web Interface (C Backend)**
 ```bash
@@ -904,12 +922,6 @@ docker restart nexstock-c-backend-local
 - ✅ Real-world industry standard
 - ✅ Perfect for learning computer science fundamentals
 
-### **Why Node.js?**
-- ✅ Easy HTTP server creation
-- ✅ JavaScript ecosystem
-- ✅ Fast development
-- ✅ Great for prototyping
-
 ### **Why Web Interface?**
 - ✅ Beautiful user interface
 - ✅ Cross-platform (works on any browser)
@@ -940,9 +952,10 @@ docker restart nexstock-c-backend-local
 ##  Verification Checklist
 
 - [x] C backend logic implemented
-- [x] Node.js server routing working
+- [x] C server routing working
 - [x] Frontend using only C backend
-- [x] Data persistence to JSON
+- [x] MongoDB persistence
+- [x] Signup, login, and bearer authentication
 - [x] All CRUD operations functional
 - [x] Sorting algorithms implemented
 - [x] Search functionality working
@@ -956,7 +969,7 @@ docker restart nexstock-c-backend-local
 
 For issues or questions:
 1. Check Docker logs for error messages
-2. Verify inventory.json exists and is valid JSON
+2. Verify `MONGODB_URI` is valid and the database is reachable
 3. Ensure port 8040 is available
 4. Check that inventory-api.c is present in the backend folder
 
@@ -969,4 +982,4 @@ For issues or questions:
 **Date:** December 2025  
 **Language:** C + JavaScript + HTML/CSS  
 **Framework:** C HTTP server (libmicrohttpd)
-**Database:** JSON file (No SQL needed)
+**Database:** MongoDB (`products`, `rentals`, and `users` collections)

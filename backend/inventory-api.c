@@ -1,83 +1,158 @@
 #define _GNU_SOURCE
 #include <microhttpd.h>
 #include <cjson/cJSON.h>
+#include <bson/bson.h>
+#include <mongoc/mongoc.h>
+#include <openssl/rand.h>
+#include <openssl/sha.h>
 #include <stdio.h>
-#include <fcntl.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <time.h>
+#include <fcntl.h>
+#include <pthread.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 #define DEFAULT_PORT 8040
 #define MAX_BODY 65536
-#define INVENTORY_FILE "backend/inventory.json"
 #define FRONTEND_ROOT "frontend"
+#define MAX_SESSIONS 256
 
 typedef struct {
     char *body;
     size_t length;
 } RequestBody;
 
-static const char *method_or_empty(const char *value) {
-    return value ? value : "";
-}
+typedef struct {
+    char token[65];
+    char email[256];
+} Session;
 
-static cJSON *load_inventory(void) {
-    FILE *file = fopen(INVENTORY_FILE, "rb");
-    long size;
-    char *text;
-    cJSON *root;
+static mongoc_client_t *mongo_client;
+static mongoc_database_t *mongo_database;
+static Session sessions[MAX_SESSIONS];
+static pthread_mutex_t sessions_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-    if (!file) {
-        root = cJSON_CreateObject();
-        cJSON_AddArrayToObject(root, "products");
-        cJSON_AddArrayToObject(root, "rentals");
-        return root;
-    }
-
-    fseek(file, 0, SEEK_END);
-    size = ftell(file);
-    rewind(file);
-    text = calloc((size_t)size + 1, 1);
-    if (!text || fread(text, 1, (size_t)size, file) != (size_t)size) {
-        free(text);
-        fclose(file);
-        return NULL;
-    }
-    fclose(file);
-
-    root = cJSON_Parse(text);
-    free(text);
-    if (!root || !cJSON_IsObject(root)) {
-        cJSON_Delete(root);
-        return NULL;
-    }
-    if (!cJSON_IsArray(cJSON_GetObjectItem(root, "products"))) {
-        cJSON_AddArrayToObject(root, "products");
-    }
-    if (!cJSON_IsArray(cJSON_GetObjectItem(root, "rentals"))) {
-        cJSON_AddArrayToObject(root, "rentals");
-    }
+static cJSON *empty_inventory(void) {
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddArrayToObject(root, "products");
+    cJSON_AddArrayToObject(root, "rentals");
     return root;
 }
 
-static int save_inventory(const cJSON *root) {
-    FILE *file;
-    char *text = cJSON_Print(root);
-    if (!text) return 0;
+static cJSON *load_collection(const char *name) {
+    mongoc_collection_t *collection = mongoc_database_get_collection(mongo_database, name);
+    mongoc_cursor_t *cursor = mongoc_collection_find_with_opts(collection, NULL, NULL, NULL);
+    const bson_t *document;
+    cJSON *array = cJSON_CreateArray();
 
-    file = fopen(INVENTORY_FILE, "wb");
-    if (!file) {
-        free(text);
-        return 0;
+    while (mongoc_cursor_next(cursor, &document)) {
+        size_t json_length = 0;
+        char *json = bson_as_relaxed_extended_json(document, &json_length);
+        cJSON *item = cJSON_ParseWithLength(json, json_length);
+        if (item && cJSON_IsObject(item)) {
+            cJSON_DeleteItemFromObject(item, "_id");
+            cJSON_AddItemToArray(array, item);
+        } else {
+            cJSON_Delete(item);
+        }
+        bson_free(json);
     }
-    fputs(text, file);
-    fclose(file);
-    free(text);
-    return 1;
+    if (mongoc_cursor_error(cursor, NULL)) {
+        cJSON_Delete(array);
+        array = NULL;
+    }
+    mongoc_cursor_destroy(cursor);
+    mongoc_collection_destroy(collection);
+    return array;
+}
+
+static cJSON *load_inventory(void) {
+    cJSON *root = empty_inventory();
+    cJSON *products = load_collection("products");
+    cJSON *rentals = load_collection("rentals");
+    if (!products || !rentals) {
+        cJSON_Delete(products);
+        cJSON_Delete(rentals);
+        cJSON_Delete(root);
+        return NULL;
+    }
+    cJSON_ReplaceItemInObject(root, "products", products);
+    cJSON_ReplaceItemInObject(root, "rentals", rentals);
+    return root;
+}
+
+static int save_collection(const char *name, const cJSON *array) {
+    mongoc_collection_t *collection = mongoc_database_get_collection(mongo_database, name);
+    bson_t query = BSON_INITIALIZER;
+    bson_t options = BSON_INITIALIZER;
+    cJSON *item;
+    int success = mongoc_collection_delete_many(collection, &query, &options, NULL, NULL);
+    cJSON_ArrayForEach(item, array) {
+        char *json = cJSON_PrintUnformatted(item);
+        bson_error_t error;
+        bson_t *document = bson_new_from_json((const uint8_t *)json, -1, &error);
+        if (!document || !mongoc_collection_insert_one(collection, document, NULL, NULL, &error)) success = 0;
+        bson_destroy(document);
+        free(json);
+    }
+    bson_destroy(&query);
+    bson_destroy(&options);
+    mongoc_collection_destroy(collection);
+    return success;
+}
+
+static int save_inventory(const cJSON *root) {
+    return save_collection("products", cJSON_GetObjectItem(root, "products")) &&
+           save_collection("rentals", cJSON_GetObjectItem(root, "rentals"));
+}
+
+static void sha256_hex(const char *value, char output[65]) {
+    unsigned char digest[SHA256_DIGEST_LENGTH];
+    SHA256((const unsigned char *)value, strlen(value), digest);
+    for (size_t i = 0; i < sizeof(digest); i++) sprintf(output + (i * 2), "%02x", digest[i]);
+    output[64] = '\0';
+}
+
+static void token_hex(char output[65]) {
+    unsigned char bytes[32];
+    if (RAND_bytes(bytes, sizeof(bytes)) != 1) {
+        for (size_t i = 0; i < sizeof(bytes); i++) bytes[i] = (unsigned char)(rand() & 0xff);
+    }
+    for (size_t i = 0; i < sizeof(bytes); i++) sprintf(output + (i * 2), "%02x", bytes[i]);
+    output[64] = '\0';
+}
+
+static int session_valid(const char *token) {
+    int valid = 0;
+    if (!token || !token[0]) return 0;
+    pthread_mutex_lock(&sessions_mutex);
+    for (size_t i = 0; i < MAX_SESSIONS; i++) {
+        if (!strcmp(sessions[i].token, token)) { valid = 1; break; }
+    }
+    pthread_mutex_unlock(&sessions_mutex);
+    return valid;
+}
+
+static void add_session(const char *token, const char *email) {
+    pthread_mutex_lock(&sessions_mutex);
+    size_t slot = 0;
+    for (size_t i = 0; i < MAX_SESSIONS; i++) if (!sessions[i].token[0]) { slot = i; break; }
+    snprintf(sessions[slot].token, sizeof(sessions[slot].token), "%s", token);
+    snprintf(sessions[slot].email, sizeof(sessions[slot].email), "%s", email);
+    pthread_mutex_unlock(&sessions_mutex);
+}
+
+static const char *bearer_token(struct MHD_Connection *connection) {
+    const char *header = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "Authorization");
+    return header && !strncasecmp(header, "Bearer ", 7) ? header + 7 : NULL;
+}
+
+static const char *method_or_empty(const char *value) {
+    return value ? value : "";
 }
 
 static cJSON *json_response(int success, const char *message) {
@@ -147,6 +222,89 @@ static cJSON *handle_api(const char *method, const char *url, const char *body_t
         }
         result = cJSON_CreateObject();
         cJSON_AddStringToObject(result, "apiKey", key);
+        return result;
+    }
+
+    if ((!strcmp(url, "/api/auth/signup") || !strcmp(url, "/api/auth/login")) &&
+        !strcmp(method, "POST")) {
+        const char *email = body_string(body, "email");
+        const char *password = body_string(body, "password");
+        char password_hash[65];
+        bson_t query = BSON_INITIALIZER;
+        bson_t user_document = BSON_INITIALIZER;
+        bson_error_t error;
+        mongoc_collection_t *users = mongoc_database_get_collection(mongo_database, "users");
+        const bson_t *found = NULL;
+        mongoc_cursor_t *cursor;
+
+        if (!email[0] || !password[0] || strlen(email) >= 256 || strlen(password) < 8) {
+            cJSON_Delete(body);
+            *status = 400;
+            mongoc_collection_destroy(users);
+            return json_response(0, "Email and a password of at least 8 characters are required");
+        }
+        BSON_APPEND_UTF8(&query, "email", email);
+        cursor = mongoc_collection_find_with_opts(users, &query, NULL, NULL);
+        mongoc_cursor_next(cursor, &found);
+        if (!strcmp(url, "/api/auth/signup") && found) {
+            mongoc_cursor_destroy(cursor);
+            bson_destroy(&query);
+            mongoc_collection_destroy(users);
+            cJSON_Delete(body);
+            *status = 409;
+            return json_response(0, "Email already registered");
+        }
+        if (!strcmp(url, "/api/auth/login") && !found) {
+            mongoc_cursor_destroy(cursor);
+            bson_destroy(&query);
+            mongoc_collection_destroy(users);
+            cJSON_Delete(body);
+            *status = 401;
+            return json_response(0, "Invalid email or password");
+        }
+        sha256_hex(password, password_hash);
+        if (!strcmp(url, "/api/auth/login")) {
+            bson_iter_t iterator;
+            const char *stored_hash = NULL;
+            if (bson_iter_init_find(&iterator, found, "passwordHash") && BSON_ITER_HOLDS_UTF8(&iterator))
+                stored_hash = bson_iter_utf8(&iterator, NULL);
+            if (!stored_hash || strcmp(stored_hash, password_hash)) {
+                mongoc_cursor_destroy(cursor);
+                bson_destroy(&query);
+                mongoc_collection_destroy(users);
+                cJSON_Delete(body);
+                *status = 401;
+                return json_response(0, "Invalid email or password");
+            }
+        } else {
+            BSON_APPEND_UTF8(&user_document, "email", email);
+            BSON_APPEND_UTF8(&user_document, "passwordHash", password_hash);
+            BSON_APPEND_DATE_TIME(&user_document, "createdAt", (int64_t)time(NULL) * 1000);
+            if (!mongoc_collection_insert_one(users, &user_document, NULL, NULL, &error)) {
+                mongoc_cursor_destroy(cursor);
+                bson_destroy(&query);
+                bson_destroy(&user_document);
+                mongoc_collection_destroy(users);
+                cJSON_Delete(body);
+                *status = 500;
+                return json_response(0, error.message);
+            }
+        }
+        char token[65];
+        token_hex(token);
+        add_session(token, email);
+        result = cJSON_CreateObject();
+        cJSON_AddBoolToObject(result, "success", 1);
+        cJSON_AddStringToObject(result, "token", token);
+        cJSON *user = cJSON_CreateObject();
+        cJSON_AddStringToObject(user, "email", email);
+        cJSON_AddItemToObject(result, "user", user);
+        mongoc_cursor_destroy(cursor);
+        bson_destroy(&query);
+        bson_destroy(&user_document);
+        mongoc_collection_destroy(users);
+        cJSON_Delete(body);
+        *status = !strcmp(url, "/api/auth/signup") ? 201 : 200;
         return result;
     }
 
@@ -357,7 +515,7 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *connection, con
         struct MHD_Response *response = MHD_create_response_from_buffer(0, "", MHD_RESPMEM_PERSISTENT);
         MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
         MHD_add_response_header(response, "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        MHD_add_response_header(response, "Access-Control-Allow-Headers", "Content-Type");
+        MHD_add_response_header(response, "Access-Control-Allow-Headers", "Content-Type, Authorization");
         return MHD_queue_response(connection, 204, response);
     }
 
@@ -377,6 +535,15 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *connection, con
         return MHD_YES;
     }
     if (strncmp(url, "/api/", 5) == 0) {
+        if (!strncmp(url, "/api/c/", 7) && !session_valid(bearer_token(connection))) {
+            free(request->body);
+            free(request);
+            *con_cls = NULL;
+            result = json_response(0, "Authentication required");
+            enum MHD_Result response = send_json(connection, result, MHD_HTTP_UNAUTHORIZED);
+            cJSON_Delete(result);
+            return response;
+        }
         result = handle_api(method_or_empty(method), url, request->body, &status);
         free(request->body);
         free(request);
@@ -404,17 +571,57 @@ static void request_completed(void *cls, struct MHD_Connection *connection, void
 
 int main(void) {
     const char *port_text = getenv("PORT");
+    const char *mongo_uri = getenv("MONGODB_URI");
+    const char *database_name = getenv("MONGODB_DATABASE");
     unsigned short port = (unsigned short)(port_text ? atoi(port_text) : DEFAULT_PORT);
+    mongoc_uri_t *uri;
+    bson_error_t error;
+    bson_t ping = BSON_INITIALIZER;
     struct MHD_Daemon *daemon;
     srand((unsigned int)time(NULL));
+    if (!mongo_uri || !mongo_uri[0]) {
+        fprintf(stderr, "MONGODB_URI is required\n");
+        return 1;
+    }
+    mongoc_init();
+    uri = mongoc_uri_new_with_error(mongo_uri, &error);
+    if (!uri) {
+        fprintf(stderr, "Invalid MONGODB_URI: %s\n", error.message);
+        mongoc_cleanup();
+        return 1;
+    }
+    mongo_client = mongoc_client_new_from_uri(uri);
+    mongoc_uri_destroy(uri);
+    if (!mongo_client) {
+        fprintf(stderr, "Unable to create MongoDB client\n");
+        mongoc_cleanup();
+        return 1;
+    }
+    mongo_database = mongoc_client_get_database(mongo_client, database_name && database_name[0] ? database_name : "nexstock");
+    BSON_APPEND_INT32(&ping, "ping", 1);
+    if (!mongoc_database_command_simple(mongo_database, &ping, NULL, NULL, &error)) {
+        fprintf(stderr, "Unable to connect to MongoDB: %s\n", error.message);
+        bson_destroy(&ping);
+        mongoc_database_destroy(mongo_database);
+        mongoc_client_destroy(mongo_client);
+        mongoc_cleanup();
+        return 1;
+    }
+    bson_destroy(&ping);
     daemon = MHD_start_daemon(MHD_USE_INTERNAL_POLLING_THREAD, port, NULL, NULL, &handler, NULL,
                               MHD_OPTION_NOTIFY_COMPLETED, &request_completed, NULL, MHD_OPTION_END);
     if (!daemon) {
         fprintf(stderr, "Failed to start C backend on port %u\n", port);
+        mongoc_database_destroy(mongo_database);
+        mongoc_client_destroy(mongo_client);
+        mongoc_cleanup();
         return 1;
     }
     printf("NexStock C backend listening on port %u\n", port);
     while (1) sleep(3600);
     MHD_stop_daemon(daemon);
+    mongoc_database_destroy(mongo_database);
+    mongoc_client_destroy(mongo_client);
+    mongoc_cleanup();
     return 0;
 }

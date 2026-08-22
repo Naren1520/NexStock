@@ -45,7 +45,8 @@ static cJSON *empty_inventory(void) {
 
 static cJSON *load_collection(const char *name) {
     mongoc_collection_t *collection = mongoc_database_get_collection(mongo_database, name);
-    mongoc_cursor_t *cursor = mongoc_collection_find_with_opts(collection, NULL, NULL, NULL);
+    bson_t filter = BSON_INITIALIZER;
+    mongoc_cursor_t *cursor = mongoc_collection_find_with_opts(collection, &filter, NULL, NULL);
     const bson_t *document;
     cJSON *array = cJSON_CreateArray();
 
@@ -66,6 +67,7 @@ static cJSON *load_collection(const char *name) {
         array = NULL;
     }
     mongoc_cursor_destroy(cursor);
+    bson_destroy(&filter);
     mongoc_collection_destroy(collection);
     return array;
 }

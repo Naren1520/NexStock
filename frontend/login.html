@@ -63,7 +63,7 @@
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || "Authentication failed");
                 window.nexstockAuth.save(data);
-                window.location.replace("dashboard.html");
+                window.location.replace("main.html");
             } catch (requestError) {
                 error.textContent = requestError.message;
             }

@@ -1,7 +1,7 @@
 FROM debian:bookworm-slim AS build
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends gcc libc6-dev pkg-config libmicrohttpd-dev libcjson-dev libmongoc-dev libbson-dev libssl-dev \
+    && apt-get install -y --no-install-recommends gcc libc6-dev pkg-config ca-certificates libmicrohttpd-dev libcjson-dev libmongoc-dev libbson-dev libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -12,7 +12,7 @@ RUN gcc -O2 -Wall -Wextra -o nexstock-backend backend/inventory-api.c \
 FROM debian:bookworm-slim
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libmicrohttpd12 libcjson1 libmongoc-1.0-0 libbson-1.0-0 libssl3 \
+    && apt-get install -y --no-install-recommends ca-certificates libmicrohttpd12 libcjson1 libmongoc-1.0-0 libbson-1.0-0 libssl3 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
